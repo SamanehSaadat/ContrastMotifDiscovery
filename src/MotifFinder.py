@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import math
 
 
 class CandidMotifFinder:
@@ -65,8 +63,7 @@ class CandidMotifFinder:
                     dist_mat[len(windows) - 1, j] = dist
         return dist_mat, windows
 
-
-    def snippet_finder(self, sequences, snippets_count, window_size, dist_func, dist_mat=None, windows=None):
+    def motif_finder(self, sequences, motifs_count, window_size, dist_func, dist_mat=None, windows=None):
         snippets, snippets_farc, snippets_loc = [], [], []
         snippet_profiles = []
         sequences = [s for s in sequences if str(s) != 'nan' and len(s) >= window_size]
