@@ -19,7 +19,7 @@ def remove_repeats(s):
 
 
 def clean_sequences(df):
-    df = df[df['action'] != 'o']
+    df = df[df['category'] != 'o']
     df['seq_no_move'] = df['seq'].apply(lambda x: x.replace('C', ''))
     df['seq_no_move'] = df['seq_no_move'].apply(lambda x: x.replace('d', ''))
     df['seq_no_move'] = df['seq_no_move'].apply(lambda x: x.replace('j', ''))
@@ -27,6 +27,7 @@ def clean_sequences(df):
     df['seq_no_move'] = df['seq_no_move'].apply(lambda x: x.replace('E', ''))
 
     df['seq_rep_rem'] = df['seq_no_move'].apply(remove_repeats)
+    return df
 
 
 def categorize_sequences(df, categories, seq_column, category_column):
@@ -71,24 +72,24 @@ def window_profile_min(seq, window, distance_function='LCS'):
     return msf
 
 
-def find_motifs_avg_dist(seqs, window_size, motif, motif_action):
+def find_motifs_avg_dist(seqs, window_size, motif, motif_category):
     dist_dict = {}
     avg_dist = {}
-    for seq_action, seq_list in seqs.items():
+    for seq_category, seq_list in seqs.items():
         seq_list = [s for s in seq_list if len(s) >= window_size]
         dists = []
         for seq in seq_list:
             dists.append(window_profile_min(seq, motif))
-        dist_dict[seq_action] = dists
-        avg_dist[seq_action] = np.mean(dists)
+        dist_dict[seq_category] = dists
+        avg_dist[seq_category] = np.mean(dists)
 
     significant = True
     pvalue_threshold = 0.05
-    for seq_action, seq_list in seqs.items():
-        if seq_action != motif_action:
-            #             print(motif_action_seq_list)
+    for seq_category, seq_list in seqs.items():
+        if seq_category != motif_category:
+            #             print(motif_category_seq_list)
             #             print(seq_list)
-            statistics, pvalue = stats.ttest_ind(dist_dict[motif_action], dist_dict[seq_action])
+            statistics, pvalue = stats.ttest_ind(dist_dict[motif_category], dist_dict[seq_category])
             if pvalue > pvalue_threshold:
                 significant = False
                 break
@@ -96,12 +97,19 @@ def find_motifs_avg_dist(seqs, window_size, motif, motif_action):
     has_min_mean = False
     temp = min(avg_dist.values())
     min_mean = [key for key in avg_dist if avg_dist[key] == temp]
-    if len(min_mean) == 1 and min_mean[0] == motif_action:
+    if len(min_mean) == 1 and min_mean[0] == motif_category:
         has_min_mean = True
 
     if significant == True and has_min_mean == True:
         df = pd.DataFrame.from_dict(avg_dist, orient='index').T
         df['motif'] = motif
-        df['motif action'] = motif_action
+        df['motif category'] = motif_category
         return df
     return None
+
+
+def translate_seq(event_map, s):
+    events = []
+    for c in s:
+        events.append(event_map[c][:-5])
+    return events

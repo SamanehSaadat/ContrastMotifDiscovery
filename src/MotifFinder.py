@@ -64,11 +64,11 @@ class CandidMotifFinder:
         return dist_mat, windows
 
     def motif_finder(self, sequences, motifs_count, window_size, dist_func, dist_mat=None, windows=None):
-        snippets, snippets_farc, snippets_loc = [], [], []
-        snippet_profiles = []
+        motifs, motifs_farc, motifs_loc = [], [], []
+        motif_profiles = []
         sequences = [s for s in sequences if str(s) != 'nan' and len(s) >= window_size]
         
-        snippets_dist_threshold = 2
+        motifs_dist_threshold = 2
         
         if dist_mat is None:
             dist_mat, windows = self.distance_matrix(sequences, window_size, distance_function=dist_func)
@@ -78,32 +78,32 @@ class CandidMotifFinder:
         while True:
             min_area, idx, snpt = np.inf, -1, None
             for i in range(len(windows)):
-                snippet = windows[i]
+                motif = windows[i]
                 element_wise_min = np.minimum(np.array(dist_mat[i]), Q)
                 profile_area = sum(element_wise_min)
                 if profile_area < min_area:
                     min_area = profile_area
                     idx = i
-                    snpt = snippet
+                    snpt = motif
             Q = np.minimum(np.array(dist_mat[idx]), Q)
                  
-            snippets.append(snpt)
-            snippets_loc.append(idx)
-            snippet_profiles.append(dist_mat[idx])
-            if len(snippets_loc) == snippets_count:
+            motifs.append(snpt)
+            motifs_loc.append(idx)
+            motif_profiles.append(dist_mat[idx])
+            if len(motifs_loc) == motifs_count:
                 break
       
         total_min = np.full((profile_len), np.inf)
-        for i in range(snippets_count):
-            total_min = np.minimum(total_min, snippet_profiles[i])
+        for i in range(motifs_count):
+            total_min = np.minimum(total_min, motif_profiles[i])
 
-        for i in range(snippets_count):
+        for i in range(motifs_count):
             f = 0
             for j in range(profile_len):
-                if snippet_profiles[i][j] == total_min[j]:
+                if motif_profiles[i][j] == total_min[j]:
                     f += 1
             frac = f / profile_len
-            snippets_farc.append(frac)
-        res = dict(zip(snippets, snippets_farc))
+            motifs_farc.append(frac)
+        res = dict(zip(motifs, motifs_farc))
         res_df = pd.DataFrame.from_dict(res, orient='index', columns=['Fractions'])
         return res_df
