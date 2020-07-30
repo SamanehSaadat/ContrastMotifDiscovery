@@ -1,6 +1,7 @@
 import pandas as pd
 import src.Utils as utils
 import src.MotifFinder as MotifFinder
+from src.MotifRefiner import ContrastMotifRefiner
 
 window_size = 5
 
@@ -30,8 +31,9 @@ concated_motif_df = pd.concat(motifs_dfs)
 
 window_motifs, window_categories = concated_motif_df['motif'].tolist(), concated_motif_df['category'].tolist()
 window_dfs = []
+contrast_motif_refinder = ContrastMotifRefiner()
 for i in range(len(window_motifs)):
-    res = utils.find_motifs_avg_dist(seqs, window_size, window_motifs[i], window_categories[i])
+    res = contrast_motif_refinder.refine_motifs(seqs, window_size, window_motifs[i], window_categories[i])
     if res is not None:
         window_dfs.append(res)
 selected_motifs = pd.concat(window_dfs)

@@ -1,47 +1,21 @@
 import pandas as pd
 import numpy as np
+from src.Distance import SequenceDistance
 
 
 class CandidMotifFinder:
-    def hamming_distance(self, s1, s2):
-        n = len(s1)
-        dist = 0
-        for k in range(n):
-            if s1[k] != s2[k]:
-                dist += 1
-        return dist
-    
-    def LCS_distance(self, s1, s2):
-        l1 = len(s1)
-        l2 = len(s2)
-        dist = (l1 + l2) // 2 - self.LCS(s1, s2)
-        return dist
-
-    def LCS(self, s1, s2):
-        s1 = "-" + s1
-        s2 = "-" + s2
-        l1 = len(s1)
-        l2 = len(s2)
-        d = np.zeros((l1, l2))
-        for i in range(1, l1):
-            for j in range(1, l2):
-                if s1[i] == s2[j]:
-                    d[i, j] = d[i - 1, j - 1] + 1
-                else:
-                    d[i, j] = max(d[i - 1, j], d[i, j - 1])
-        return d[l1 - 1, l2 - 1]
-          
     def window_profile_min(self, seq, window, distance_function):
         window_size = len(window)
         msf = np.inf
         for i in range(len(seq) - window_size + 1):
             subseq = seq[i: i + window_size]
             if distance_function == 'hamming':
-                dist = self.hamming_distance(window, subseq)
+                dist = SequenceDistance.hamming_distance(window, subseq)
             elif distance_function == 'LCS':
-                dist = self.LCS_distance(window, subseq)
+                dist = SequenceDistance.LCS_distance(window, subseq)
             else:
                 print("ERROR: INVALID DISTANCE FUNCTION")
+                return None
             msf = min(msf, dist)
         return msf
 
@@ -67,8 +41,6 @@ class CandidMotifFinder:
         motifs, motifs_farc, motifs_loc = [], [], []
         motif_profiles = []
         sequences = [s for s in sequences if str(s) != 'nan' and len(s) >= window_size]
-        
-        motifs_dist_threshold = 2
         
         if dist_mat is None:
             dist_mat, windows = self.distance_matrix(sequences, window_size, distance_function=dist_func)
